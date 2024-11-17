@@ -177,11 +177,11 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="hash">The hash of the block.</param>
         /// <returns>The trimmed block.</returns>
-        public TrimmedBlock GetTrimmedBlock(DataCache snapshot, UInt256 hash)
+        public TrimmedBlock GetTrimmedBlock(IReadOnlyDataAccessor snapshot, UInt256 hash)
         {
-            StorageItem item = snapshot.TryGet(CreateStorageKey(Prefix_Block).Add(hash));
-            if (item is null) return null;
-            return item.Value.AsSerializable<TrimmedBlock>();
+            if (snapshot.TryGet(CreateStorageKey(Prefix_Block).Add(hash), out var item))
+                return item.Value.AsSerializable<TrimmedBlock>();
+            return null;
         }
 
         [ContractMethod(CpuFee = 1 << 15, RequiredCallFlags = CallFlags.ReadStates)]
