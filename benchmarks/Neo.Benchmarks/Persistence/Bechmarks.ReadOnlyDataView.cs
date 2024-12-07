@@ -15,24 +15,21 @@ using Neo.Persistence;
 using Neo.Plugins.Storage;
 using Neo.SmartContract;
 using System.Diagnostics;
-using System.Text;
 
 namespace Neo.Benchmarks.Persistence.Benchmarks
 {
     public class Bechmarks_ReadOnlyDataView
     {
-        private static readonly byte[] key1 = StorageKey.CreateSearchPrefix(1, [1]).ToArray();
-        private static readonly byte[] key2 = StorageKey.CreateSearchPrefix(2, [1]).ToArray();
-        private static readonly byte[] value = Encoding.UTF8.GetBytes("BechmarksReadOnlyDataView");
+        private static StorageKey key1, key2;
+
+        private static readonly byte[] value = new UInt256().GetSpan().ToArray();
 
         private const string PathLevelDB = "Data_LevelDB_Benchmarks";
-        private const string PathRocksDB = "Data_RocksDB_Benchmarks";
 
         private static readonly LevelDBStore levelDb = new();
-        private static readonly RocksDBStore rocksDb = new();
 
         private static IStore levelDbStore;
-        private static IStore rocksDbStore;
+
 
         [GlobalSetup]
         public void Setup()
@@ -40,27 +37,20 @@ namespace Neo.Benchmarks.Persistence.Benchmarks
             if (Directory.Exists(PathLevelDB))
                 Directory.Delete(PathLevelDB, true);
 
-            if (Directory.Exists(PathRocksDB))
-                Directory.Delete(PathRocksDB, true);
+            key1 = new KeyBuilder(1, 1).Add(new UInt160());
+            key2 = new KeyBuilder(2, 2).Add(new UInt160());
 
             levelDbStore = levelDb.GetStore(PathLevelDB);
-            levelDbStore.Put(key1, value);
-
-            rocksDbStore = rocksDb.GetStore(PathRocksDB);
-            rocksDbStore.Put(key1, value);
+            levelDbStore.Put(key1.ToArray(), value);
         }
 
         [GlobalCleanup]
         public void Cleanup()
         {
             levelDbStore.Dispose();
-            rocksDbStore.Dispose();
 
             if (Directory.Exists(PathLevelDB))
                 Directory.Delete(PathLevelDB, true);
-
-            if (Directory.Exists(PathRocksDB))
-                Directory.Delete(PathRocksDB, true);
         }
 
         [Benchmark]
@@ -78,28 +68,6 @@ namespace Neo.Benchmarks.Persistence.Benchmarks
         public void SnapshotCache_LevelDB()
         {
             var snapshot = new SnapshotCache(levelDbStore);
-            var ok = snapshot.TryGet(key1, out var _);
-            Debug.Assert(ok);
-
-            ok = snapshot.TryGet(key2, out var _);
-            Debug.Assert(!ok);
-        }
-
-        [Benchmark]
-        public void ReadOnlyDataView_RocksDB()
-        {
-            var view = new ReadOnlyDataView(rocksDbStore);
-            var ok = view.TryGet(key1, out var _);
-            Debug.Assert(ok);
-
-            ok = view.TryGet(key2, out var _);
-            Debug.Assert(!ok);
-        }
-
-        [Benchmark]
-        public void SnapshotCache_RocksDB()
-        {
-            var snapshot = new SnapshotCache(rocksDbStore);
             var ok = snapshot.TryGet(key1, out var _);
             Debug.Assert(ok);
 
