@@ -82,7 +82,7 @@ namespace Neo.SmartContract.Native
             return snapshot.Find(CreateStorageKey(Prefix_Block).ToArray()).Any();
         }
 
-        private bool IsTraceableBlock(DataCache snapshot, uint index, uint maxTraceableBlocks)
+        private bool IsTraceableBlock(IReadOnlyDataView snapshot, uint index, uint maxTraceableBlocks)
         {
             uint currentIndex = CurrentIndex(snapshot);
             if (index > currentIndex) return false;
@@ -95,14 +95,14 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="index">The index of the block.</param>
         /// <returns>The hash of the block.</returns>
-        public UInt256 GetBlockHash(DataCache snapshot, uint index)
+        public UInt256 GetBlockHash(IReadOnlyDataView snapshot, uint index)
         {
             if (snapshot is null)
                 throw new ArgumentNullException(nameof(snapshot));
 
-            StorageItem item = snapshot.TryGet(CreateStorageKey(Prefix_BlockHash).AddBigEndian(index));
-            if (item is null) return null;
-            return new UInt256(item.Value.Span);
+            if (snapshot.TryGet(CreateStorageKey(Prefix_BlockHash).AddBigEndian(index), out var item))
+                return new UInt256(item.Value.Span);
+            return null;
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <returns>The hash of the current block.</returns>
         [ContractMethod(CpuFee = 1 << 15, RequiredCallFlags = CallFlags.ReadStates)]
-        public UInt256 CurrentHash(DataCache snapshot)
+        public UInt256 CurrentHash(IReadOnlyDataView snapshot)
         {
             if (snapshot is null)
                 throw new ArgumentNullException(nameof(snapshot));
@@ -125,7 +125,7 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <returns>The index of the current block.</returns>
         [ContractMethod(CpuFee = 1 << 15, RequiredCallFlags = CallFlags.ReadStates)]
-        public uint CurrentIndex(DataCache snapshot)
+        public uint CurrentIndex(IReadOnlyDataView snapshot)
         {
             if (snapshot is null)
                 throw new ArgumentNullException(nameof(snapshot));
@@ -139,7 +139,7 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="hash">The hash of the block.</param>
         /// <returns><see langword="true"/> if the blockchain contains the block; otherwise, <see langword="false"/>.</returns>
-        public bool ContainsBlock(DataCache snapshot, UInt256 hash)
+        public bool ContainsBlock(IReadOnlyDataView snapshot, UInt256 hash)
         {
             if (snapshot is null)
                 throw new ArgumentNullException(nameof(snapshot));
@@ -153,7 +153,7 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="hash">The hash of the transaction.</param>
         /// <returns><see langword="true"/> if the blockchain contains the transaction; otherwise, <see langword="false"/>.</returns>
-        public bool ContainsTransaction(DataCache snapshot, UInt256 hash)
+        public bool ContainsTransaction(IReadOnlyDataView snapshot, UInt256 hash)
         {
             var txState = GetTransactionState(snapshot, hash);
             return txState != null;
@@ -168,7 +168,7 @@ namespace Neo.SmartContract.Native
         /// <param name="signers">The list of signer accounts of the conflicting transaction.</param>
         /// <param name="maxTraceableBlocks">MaxTraceableBlocks protocol setting.</param>
         /// <returns><see langword="true"/> if the blockchain contains the hash of the conflicting transaction; otherwise, <see langword="false"/>.</returns>
-        public bool ContainsConflictHash(DataCache snapshot, UInt256 hash, IEnumerable<UInt160> signers, uint maxTraceableBlocks)
+        public bool ContainsConflictHash(IReadOnlyDataView snapshot, UInt256 hash, IEnumerable<UInt160> signers, uint maxTraceableBlocks)
         {
             if (snapshot is null)
                 throw new ArgumentNullException(nameof(snapshot));
@@ -177,16 +177,22 @@ namespace Neo.SmartContract.Native
                 throw new ArgumentNullException(nameof(signers));
 
             // Check the dummy stub firstly to define whether there's exist at least one conflict record.
-            var stub = snapshot.TryGet(CreateStorageKey(Prefix_Transaction).Add(hash))?.GetInteroperable<TransactionState>();
-            if (stub is null || stub.Transaction is not null || !IsTraceableBlock(snapshot, stub.BlockIndex, maxTraceableBlocks))
-                return false;
+            if (snapshot.TryGet(CreateStorageKey(Prefix_Transaction).Add(hash), out var state))
+            {
+                var stub = state.GetInteroperable<TransactionState>();
+                if (stub is null || stub.Transaction is not null || !IsTraceableBlock(snapshot, stub.BlockIndex, maxTraceableBlocks))
+                    return false;
+            }
 
             // At least one conflict record is found, then need to check signers intersection.
             foreach (var signer in signers)
             {
-                var state = snapshot.TryGet(CreateStorageKey(Prefix_Transaction).Add(hash).Add(signer))?.GetInteroperable<TransactionState>();
-                if (state is not null && IsTraceableBlock(snapshot, state.BlockIndex, maxTraceableBlocks))
-                    return true;
+                if (snapshot.TryGet(CreateStorageKey(Prefix_Transaction).Add(hash).Add(signer), out var signerState))
+                {
+                    var stub = signerState.GetInteroperable<TransactionState>();
+                    if (stub is not null && IsTraceableBlock(snapshot, stub.BlockIndex, maxTraceableBlocks))
+                        return true;
+                }
             }
 
             return false;
@@ -198,7 +204,7 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="hash">The hash of the block.</param>
         /// <returns>The trimmed block.</returns>
-        public TrimmedBlock GetTrimmedBlock(IReadOnlyDataAccessor snapshot, UInt256 hash)
+        public TrimmedBlock GetTrimmedBlock(IReadOnlyDataView snapshot, UInt256 hash)
         {
             if (snapshot is null)
                 throw new ArgumentNullException(nameof(snapshot));
@@ -230,7 +236,7 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="hash">The hash of the block.</param>
         /// <returns>The block with the specified hash.</returns>
-        public Block GetBlock(DataCache snapshot, UInt256 hash)
+        public Block GetBlock(IReadOnlyDataView snapshot, UInt256 hash)
         {
             TrimmedBlock state = GetTrimmedBlock(snapshot, hash);
             if (state is null) return null;
@@ -247,7 +253,7 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="index">The index of the block.</param>
         /// <returns>The block with the specified index.</returns>
-        public Block GetBlock(DataCache snapshot, uint index)
+        public Block GetBlock(IReadOnlyDataView snapshot, uint index)
         {
             UInt256 hash = GetBlockHash(snapshot, index);
             if (hash is null) return null;
@@ -260,7 +266,7 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="hash">The hash of the block.</param>
         /// <returns>The block header with the specified hash.</returns>
-        public Header GetHeader(DataCache snapshot, UInt256 hash)
+        public Header GetHeader(IReadOnlyDataView snapshot, UInt256 hash)
         {
             return GetTrimmedBlock(snapshot, hash)?.Header;
         }
@@ -271,7 +277,7 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="index">The index of the block.</param>
         /// <returns>The block header with the specified index.</returns>
-        public Header GetHeader(DataCache snapshot, uint index)
+        public Header GetHeader(IReadOnlyDataView snapshot, uint index)
         {
             UInt256 hash = GetBlockHash(snapshot, index);
             if (hash is null) return null;
@@ -284,14 +290,18 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="hash">The hash of the transaction.</param>
         /// <returns>The <see cref="TransactionState"/> with the specified hash.</returns>
-        public TransactionState GetTransactionState(DataCache snapshot, UInt256 hash)
+        public TransactionState GetTransactionState(IReadOnlyDataView snapshot, UInt256 hash)
         {
             if (snapshot is null)
                 throw new ArgumentNullException(nameof(snapshot));
 
-            var state = snapshot.TryGet(CreateStorageKey(Prefix_Transaction).Add(hash))?.GetInteroperable<TransactionState>();
-            if (state?.Transaction is null) return null;
-            return state;
+            if (snapshot.TryGet(CreateStorageKey(Prefix_Transaction).Add(hash), out var item))
+            {
+                var state = item.GetInteroperable<TransactionState>();
+                if (state?.Transaction is null) return null;
+                return state;
+            }
+            return null;
         }
 
         /// <summary>
@@ -300,7 +310,7 @@ namespace Neo.SmartContract.Native
         /// <param name="snapshot">The snapshot used to read data.</param>
         /// <param name="hash">The hash of the transaction.</param>
         /// <returns>The transaction with the specified hash.</returns>
-        public Transaction GetTransaction(DataCache snapshot, UInt256 hash)
+        public Transaction GetTransaction(IReadOnlyDataView snapshot, UInt256 hash)
         {
             return GetTransactionState(snapshot, hash)?.Transaction;
         }

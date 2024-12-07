@@ -1,6 +1,6 @@
 // Copyright (C) 2015-2024 The Neo Project.
 //
-// ReadOnlyDataAccessor.cs file belongs to the neo project and is free
+// ReadOnlyDataView.cs file belongs to the neo project and is free
 // software distributed under the MIT software license, see the
 // accompanying file LICENSE in the main directory of the
 // repository or http://www.opensource.org/licenses/mit-license.php
@@ -10,23 +10,34 @@
 // modifications are permitted.
 
 using Neo.SmartContract;
+using System.Collections.Generic;
 
 namespace Neo.Persistence
 {
-    public class ReadOnlyDataAccessor : IReadOnlyDataAccessor
+    public class ReadOnlyDataView : IReadOnlyDataView
     {
         private readonly IReadOnlyStore store;
 
-        public ReadOnlyDataAccessor(IReadOnlyStore store)
+        public ReadOnlyDataView(IReadOnlyStore store)
         {
             this.store = store;
         }
 
-        public bool Contains(StorageKey key)
+        /// <inheritdoc/>
+        public bool Contains(StorageKey key) => store.Contains(key.ToArray());
+
+        /// <inheritdoc/>
+        public StorageItem this[StorageKey key]
         {
-            return store.Contains(key.ToArray());
+            get
+            {
+                if (TryGet(key, out var item))
+                    return item;
+                throw new KeyNotFoundException();
+            }
         }
 
+        /// <inheritdoc/>
         public bool TryGet(StorageKey key, out StorageItem item)
         {
             if (store.TryGet(key.ToArray(), out byte[] value))

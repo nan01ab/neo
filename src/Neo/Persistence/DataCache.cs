@@ -20,7 +20,7 @@ namespace Neo.Persistence
     /// <summary>
     /// Represents a cache for the underlying storage of the NEO blockchain.
     /// </summary>
-    public abstract class DataCache : IReadOnlyDataAccessor
+    public abstract class DataCache : IReadOnlyDataView
     {
         /// <summary>
         /// Represents an entry in the cache.
@@ -310,7 +310,7 @@ namespace Neo.Persistence
         /// Reads a specified entry from the underlying storage.
         /// </summary>
         /// <param name="key">The key of the entry.</param>
-        /// <returns>The data of the entry. Or <see langword="null"/> if the entry doesn't exist.</returns>
+        /// <returns>The data of the entry. Or throws a <see cref="KeyNotFoundException"/> if the entry doesn't exist.</returns>
         protected abstract StorageItem GetInternal(StorageKey key);
 
         /// <summary>
