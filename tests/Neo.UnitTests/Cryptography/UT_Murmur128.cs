@@ -44,13 +44,12 @@ namespace Neo.UnitTests.Cryptography
         }
 
         [TestMethod]
-        public void TestTryComputeHash()
+        public void TestComputeHash()
         {
             var murmur128 = new Murmur128(123u);
-            var buffer = new byte[murmur128.HashSize / 8];
-            var ok = murmur128.TryComputeHash("hello world"u8.ToArray(), buffer, out _);
-            ok.Should().BeTrue();
+            var buffer = murmur128.ComputeHash("hello world"u8.ToArray());
             buffer.ToHexString().Should().Be("e0a0632d4f51302c55e3b3e48d28795d");
         }
     }
 }
+

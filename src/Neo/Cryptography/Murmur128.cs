@@ -18,7 +18,7 @@ namespace Neo.Cryptography
     /// <summary>
     /// Computes the 128 bits murmur hash for the input data.
     /// </summary>
-    public sealed class Murmur128 : System.Security.Cryptography.HashAlgorithm
+    public sealed class Murmur128
     {
         private const ulong c1 = 0x87c37b91114253d5;
         private const ulong c2 = 0x4cf5ad432745937f;
@@ -32,7 +32,7 @@ namespace Neo.Cryptography
         private int length;
 
         public const int HashSizeInBits = 128;
-        public override int HashSize => HashSizeInBits;
+        public int HashSize => HashSizeInBits;
 
         private ulong H1 { get; set; }
         private ulong H2 { get; set; }
@@ -44,16 +44,10 @@ namespace Neo.Cryptography
         public Murmur128(uint seed)
         {
             this.seed = seed;
-            HashSizeValue = HashSizeInBits;
             Initialize();
         }
 
-        protected override void HashCore(byte[] array, int ibStart, int cbSize)
-        {
-            HashCore(array.AsSpan(ibStart, cbSize));
-        }
-
-        protected override void HashCore(ReadOnlySpan<byte> source)
+        private void HashCore(ReadOnlySpan<byte> source)
         {
             int cbSize = source.Length;
             length += cbSize;
@@ -107,38 +101,50 @@ namespace Neo.Cryptography
             }
         }
 
-        protected override byte[] HashFinal()
-        {
-            byte[] buffer = new byte[sizeof(ulong) * 2];
-            TryHashFinal(buffer, out _);
-            return buffer;
-        }
-
-        protected override bool TryHashFinal(Span<byte> destination, out int bytesWritten)
+        private void GetCurrentHash(Span<byte> destination)
         {
             ulong len = (ulong)length;
-            H1 ^= len; H2 ^= len;
+            var h1 = H1 ^ len;
+            var h2 = H2 ^ len;
 
-            H1 += H2;
-            H2 += H1;
+            h1 += h2;
+            h2 += h1;
 
-            H1 = FMix(H1);
-            H2 = FMix(H2);
+            h1 = FMix(h1);
+            h2 = FMix(h2);
 
-            H1 += H2;
-            H2 += H1;
+            h1 += h2;
+            h2 += h1;
 
-            if (BinaryPrimitives.TryWriteUInt64LittleEndian(destination, H1))
-                BinaryPrimitives.TryWriteUInt64LittleEndian(destination[sizeof(ulong)..], H2);
-
-            bytesWritten = Math.Min(destination.Length, sizeof(ulong) * 2);
-            return bytesWritten == sizeof(ulong) * 2;
+            if (BinaryPrimitives.TryWriteUInt64LittleEndian(destination, h1))
+                BinaryPrimitives.TryWriteUInt64LittleEndian(destination[sizeof(ulong)..], h2);
         }
 
-        public override void Initialize()
+        /// <summary>
+        /// Initializes or resets the hash algorithm.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Initialize()
         {
             H1 = H2 = seed;
             length = 0;
+        }
+
+        /// <summary>
+        /// Appends the input data to the hash and returns the current hash value.
+        /// For compatibility with old code, the return value is a byte[16].
+        /// </summary>
+        /// <param name="source">The input to compute the hash code for.</param>
+        /// <returns>The computed hash code in byte[16].</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte[] ComputeHash(ReadOnlySpan<byte> source)
+        {
+            HashCore(source);
+
+            var buffer = new byte[HashSizeInBits / 8];
+            GetCurrentHash(buffer);
+            Initialize();
+            return buffer;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -146,8 +152,7 @@ namespace Neo.Cryptography
         {
             h = (h ^ (h >> 33)) * 0xff51afd7ed558ccd;
             h = (h ^ (h >> 33)) * 0xc4ceb9fe1a85ec53;
-
-            return (h ^ (h >> 33));
+            return h ^ (h >> 33);
         }
     }
 }

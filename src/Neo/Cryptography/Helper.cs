@@ -89,8 +89,8 @@ namespace Neo.Cryptography
         /// <returns>The computed hash code.</returns>
         public static byte[] Murmur128(this byte[] value, uint seed)
         {
-            using Murmur128 murmur = new(seed);
-            return murmur.ComputeHash(value);
+            Murmur128 murmur = new(seed);
+            return murmur.ComputeHash(value.AsSpan());
         }
 
         /// <summary>
@@ -101,10 +101,8 @@ namespace Neo.Cryptography
         /// <returns>The computed hash code.</returns>
         public static byte[] Murmur128(this ReadOnlySpan<byte> value, uint seed)
         {
-            byte[] buffer = new byte[16];
-            using Murmur128 murmur = new(seed);
-            murmur.TryComputeHash(value, buffer, out _);
-            return buffer;
+            Murmur128 murmur = new(seed);
+            return murmur.ComputeHash(value);
         }
 
         /// <summary>
