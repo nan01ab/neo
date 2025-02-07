@@ -322,10 +322,10 @@ namespace Neo.SmartContract
                 {
                     sb.EmitPush(item.Parameters[j]);
                 }
-                witnesses[i] = new Witness
+                witnesses[i] = new()
                 {
                     InvocationScript = sb.ToArray(),
-                    VerificationScript = item.Script ?? Array.Empty<byte>()
+                    VerificationScript = item.Script ?? ReadOnlyMemory<byte>.Empty
                 };
             }
             return witnesses;

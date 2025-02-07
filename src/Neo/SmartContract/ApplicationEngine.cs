@@ -660,11 +660,7 @@ namespace Neo.SmartContract
                     Timestamp = currentBlock.Timestamp + settings.MillisecondsPerBlock,
                     Index = currentBlock.Index + 1,
                     NextConsensus = currentBlock.NextConsensus,
-                    Witness = new Witness
-                    {
-                        InvocationScript = Array.Empty<byte>(),
-                        VerificationScript = Array.Empty<byte>()
-                    },
+                    Witness = Witness.Empty
                 },
                 Transactions = Array.Empty<Transaction>()
             };

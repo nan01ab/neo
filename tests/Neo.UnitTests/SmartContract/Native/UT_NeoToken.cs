@@ -445,7 +445,7 @@ namespace Neo.UnitTests.SmartContract.Native
                     MerkleRoot = UInt256.Zero,
                     NextConsensus = UInt160.Zero,
                     PrevHash = UInt256.Zero,
-                    Witness = new Witness() { InvocationScript = Array.Empty<byte>(), VerificationScript = Array.Empty<byte>() }
+                    Witness = Witness.Empty
                 },
                 Transactions = Array.Empty<Transaction>()
             };
@@ -549,12 +549,12 @@ namespace Neo.UnitTests.SmartContract.Native
                 Header = new Header
                 {
                     Index = 1,
-                    Witness = new Witness() { InvocationScript = Array.Empty<byte>(), VerificationScript = Array.Empty<byte>() },
+                    Witness = Witness.Empty,
                     MerkleRoot = UInt256.Zero,
                     NextConsensus = UInt160.Zero,
                     PrevHash = UInt256.Zero
                 },
-                Transactions = Array.Empty<Transaction>()
+                Transactions = []
             };
             Assert.IsTrue(Check_PostPersist(clonedCache, persistingBlock));
 
@@ -736,12 +736,12 @@ namespace Neo.UnitTests.SmartContract.Native
                 Header = new Header
                 {
                     Index = 21,
-                    Witness = new Witness() { InvocationScript = Array.Empty<byte>(), VerificationScript = Array.Empty<byte>() },
+                    Witness = Witness.Empty,
                     MerkleRoot = UInt256.Zero,
                     NextConsensus = UInt160.Zero,
                     PrevHash = UInt256.Zero
                 },
-                Transactions = Array.Empty<Transaction>()
+                Transactions = []
             };
             Assert.IsTrue(Check_OnPersist(cloneCache, persistingBlock));
 
@@ -891,12 +891,12 @@ namespace Neo.UnitTests.SmartContract.Native
                 Header = new Header
                 {
                     Index = 0,
-                    Witness = new Witness() { InvocationScript = Array.Empty<byte>(), VerificationScript = Array.Empty<byte>() },
+                    Witness = Witness.Empty,
                     MerkleRoot = UInt256.Zero,
                     NextConsensus = UInt160.Zero,
                     PrevHash = UInt256.Zero
                 },
-                Transactions = Array.Empty<Transaction>()
+                Transactions = []
             };
             Assert.IsTrue(Check_PostPersist(clonedCache, persistingBlock));
 
@@ -917,12 +917,12 @@ namespace Neo.UnitTests.SmartContract.Native
                 Header = new Header
                 {
                     Index = 1,
-                    Witness = new Witness() { InvocationScript = Array.Empty<byte>(), VerificationScript = Array.Empty<byte>() },
+                    Witness = Witness.Empty,
                     MerkleRoot = UInt256.Zero,
                     NextConsensus = UInt160.Zero,
                     PrevHash = UInt256.Zero
                 },
-                Transactions = Array.Empty<Transaction>()
+                Transactions = []
             };
             Assert.IsTrue(Check_PostPersist(clonedCache, persistingBlock));
 
@@ -938,12 +938,12 @@ namespace Neo.UnitTests.SmartContract.Native
                 Header = new Header
                 {
                     Index = 21,
-                    Witness = new Witness() { InvocationScript = Array.Empty<byte>(), VerificationScript = Array.Empty<byte>() },
+                    Witness = Witness.Empty,
                     MerkleRoot = UInt256.Zero,
                     NextConsensus = UInt160.Zero,
                     PrevHash = UInt256.Zero
                 },
-                Transactions = Array.Empty<Transaction>()
+                Transactions = []
             };
             Assert.IsTrue(Check_PostPersist(clonedCache, persistingBlock));
 

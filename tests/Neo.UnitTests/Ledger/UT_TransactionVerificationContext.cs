@@ -43,16 +43,9 @@ namespace Neo.UnitTests.Ledger
             mock.Object.Script = randomBytes;
             mock.Object.NetworkFee = networkFee;
             mock.Object.SystemFee = systemFee;
-            mock.Object.Signers = new[] { new Signer { Account = UInt160.Zero } };
-            mock.Object.Attributes = Array.Empty<TransactionAttribute>();
-            mock.Object.Witnesses = new[]
-            {
-                new Witness
-                {
-                    InvocationScript = Array.Empty<byte>(),
-                    VerificationScript = Array.Empty<byte>()
-                }
-            };
+            mock.Object.Signers = [new() { Account = UInt160.Zero }];
+            mock.Object.Attributes = [];
+            mock.Object.Witnesses = [Witness.Empty];
             return mock.Object;
         }
 

@@ -83,16 +83,9 @@ namespace Neo.UnitTests.Ledger
             mock.Setup(p => p.VerifyStateIndependent(It.IsAny<ProtocolSettings>())).Returns(VerifyResult.Succeed);
             mock.Object.Script = randomBytes;
             mock.Object.NetworkFee = fee;
-            mock.Object.Attributes = Array.Empty<TransactionAttribute>();
-            mock.Object.Signers = new Signer[] { new Signer() { Account = senderAccount, Scopes = WitnessScope.None } };
-            mock.Object.Witnesses = new[]
-            {
-                new Witness
-                {
-                    InvocationScript = Array.Empty<byte>(),
-                    VerificationScript = Array.Empty<byte>()
-                }
-            };
+            mock.Object.Attributes = [];
+            mock.Object.Signers = [new() { Account = senderAccount, Scopes = WitnessScope.None }];
+            mock.Object.Witnesses = [Witness.Empty];
             return mock.Object;
         }
 
@@ -107,16 +100,9 @@ namespace Neo.UnitTests.Ledger
             mock.Setup(p => p.VerifyStateIndependent(It.IsAny<ProtocolSettings>())).Returns(VerifyResult.Succeed);
             mock.Object.Script = randomBytes;
             mock.Object.NetworkFee = fee;
-            mock.Object.Attributes = Array.Empty<TransactionAttribute>();
-            mock.Object.Signers = new Signer[] { new Signer() { Account = senderAccount, Scopes = WitnessScope.None } };
-            mock.Object.Witnesses = new[]
-            {
-                new Witness
-                {
-                    InvocationScript = Array.Empty<byte>(),
-                    VerificationScript = Array.Empty<byte>()
-                }
-            };
+            mock.Object.Attributes = [];
+            mock.Object.Signers = [new() { Account = senderAccount, Scopes = WitnessScope.None }];
+            mock.Object.Witnesses = [Witness.Empty];
             return mock.Object;
         }
 

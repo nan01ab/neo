@@ -20,7 +20,9 @@ namespace Neo.Network.RPC.Tests
 {
     internal static class TestUtils
     {
-        public readonly static List<RpcTestCase> RpcTestCases = ((JArray)JToken.Parse(File.ReadAllText("RpcTestCases.json"))).Select(p => RpcTestCase.FromJson((JObject)p)).ToList();
+        public readonly static List<RpcTestCase> RpcTestCases = ((JArray)JToken.Parse(File.ReadAllText("RpcTestCases.json")))
+            .Select(p => RpcTestCase.FromJson((JObject)p))
+            .ToList();
 
         public static Block GetBlock(int txCount)
         {
@@ -31,11 +33,7 @@ namespace Neo.Network.RPC.Tests
                     PrevHash = UInt256.Zero,
                     MerkleRoot = UInt256.Zero,
                     NextConsensus = UInt160.Zero,
-                    Witness = new Witness
-                    {
-                        InvocationScript = new byte[0],
-                        VerificationScript = new byte[0]
-                    }
+                    Witness = Witness.Empty
                 },
                 Transactions = Enumerable.Range(0, txCount).Select(p => GetTransaction()).ToArray()
             };
@@ -51,16 +49,9 @@ namespace Neo.Network.RPC.Tests
             return new Transaction
             {
                 Script = new byte[1],
-                Signers = new Signer[] { new Signer { Account = UInt160.Zero } },
-                Attributes = new TransactionAttribute[0],
-                Witnesses = new Witness[]
-                {
-                    new Witness
-                    {
-                        InvocationScript = new byte[0],
-                        VerificationScript = new byte[0]
-                    }
-                }
+                Signers = [new Signer { Account = UInt160.Zero }],
+                Attributes = [],
+                Witnesses = [Witness.Empty]
             };
         }
     }

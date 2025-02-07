@@ -32,7 +32,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
                 Witness = new Witness()
                 {
                     InvocationScript = new byte[] { 3, 5, 6 },
-                    VerificationScript = Array.Empty<byte>()
+                    VerificationScript = ReadOnlyMemory<byte>.Empty
                 }
             };
             Assert.AreEqual(42, test.Size);
@@ -51,7 +51,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
                 Witness = new Witness()
                 {
                     InvocationScript = new byte[] { (byte)OpCode.PUSH1, (byte)OpCode.PUSH2, (byte)OpCode.PUSH3 },
-                    VerificationScript = Array.Empty<byte>()
+                    VerificationScript = ReadOnlyMemory<byte>.Empty
                 }
             };
             var clone = test.ToArray().AsSerializable<ExtensiblePayload>();

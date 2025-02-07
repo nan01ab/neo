@@ -58,6 +58,18 @@ namespace Neo.Network.P2P.Payloads
 
         public int Size => InvocationScript.GetVarSize() + VerificationScript.GetVarSize();
 
+        /// <summary>
+        /// Creates a new empty witness.
+        /// </summary>
+        public static Witness Empty
+        {
+            get => new()
+            {
+                InvocationScript = ReadOnlyMemory<byte>.Empty,
+                VerificationScript = ReadOnlyMemory<byte>.Empty
+            };
+        }
+
         void ISerializable.Deserialize(ref MemoryReader reader)
         {
             InvocationScript = reader.ReadVarMemory(MaxInvocationScript);

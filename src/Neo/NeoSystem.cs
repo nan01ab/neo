@@ -162,9 +162,9 @@ namespace Neo
                 Index = 0,
                 PrimaryIndex = 0,
                 NextConsensus = Contract.GetBFTAddress(settings.StandbyValidators),
-                Witness = new Witness
+                Witness = new()
                 {
-                    InvocationScript = Array.Empty<byte>(),
+                    InvocationScript = ReadOnlyMemory<byte>.Empty,
                     VerificationScript = new[] { (byte)OpCode.PUSH1 }
                 },
             },
