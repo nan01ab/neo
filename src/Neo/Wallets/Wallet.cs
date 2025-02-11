@@ -13,6 +13,7 @@ using Neo.Cryptography;
 using Neo.Extensions;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.Sign;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
@@ -36,7 +37,7 @@ namespace Neo.Wallets
     /// <summary>
     /// The base class of wallets.
     /// </summary>
-    public abstract class Wallet
+    public abstract class Wallet : ISigner
     {
         private static readonly List<IWalletFactory> factories = new() { NEP6WalletFactory.Instance };
 
@@ -592,9 +593,13 @@ namespace Neo.Wallets
 
         /// <summary>
         /// Signs the <see cref="IVerifiable"/> in the specified <see cref="ContractParametersContext"/> with the wallet.
+        /// <see cref="ISigner.Sign(ContractParametersContext)"/>
         /// </summary>
         /// <param name="context">The <see cref="ContractParametersContext"/> to be used.</param>
-        /// <returns><see langword="true"/> if the signature is successfully added to the context; otherwise, <see langword="false"/>.</returns>
+        /// <returns>
+        /// <see langword="true"/> if the signature is successfully added to the context;
+        /// otherwise, <see langword="false"/>.
+        /// </returns>
         public bool Sign(ContractParametersContext context)
         {
             if (context.Network != ProtocolSettings.Network) return false;
@@ -638,23 +643,31 @@ namespace Neo.Wallets
                 }
 
                 // Try Smart contract verification
-
-                var contract = NativeContract.ContractManagement.GetContract(context.SnapshotCache, scriptHash);
-
-                if (contract != null)
-                {
-                    var deployed = new DeployedContract(contract);
-
-                    // Only works with verify without parameters
-
-                    if (deployed.ParameterList.Length == 0)
-                    {
-                        fSuccess |= context.Add(deployed);
-                    }
-                }
+                fSuccess |= context.AddDeployedContract(scriptHash);
             }
 
             return fSuccess;
+        }
+
+        /// <inheritdoc/>
+        public byte[] Sign(uint network, ReadOnlySpan<byte> signData, ECPoint publicKey)
+        {
+            var account = GetAccount(publicKey);
+            var privateKey = account?.GetKey().PrivateKey;
+            if (privateKey == null) return null;
+            return Crypto.Sign(signData, privateKey);
+        }
+
+        /// <inheritdoc/>
+        public int IndexOf(IReadOnlyList<ECPoint> publicKeys)
+        {
+            for (int index = 0; index < publicKeys.Count; index++)
+            {
+                var account = GetAccount(publicKeys[index]);
+                if (account != null && account.HasKey)
+                    return index;
+            }
+            return -1;
         }
 
         /// <summary>

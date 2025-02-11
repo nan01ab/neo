@@ -12,10 +12,12 @@
 #nullable enable
 
 using Neo.Cryptography;
+using Neo.Cryptography.ECC;
 using Neo.Extensions;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.Sign;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
@@ -41,6 +43,21 @@ namespace Neo.Wallets
         public static byte[] Sign(this IVerifiable verifiable, KeyPair key, uint network)
         {
             return Crypto.Sign(verifiable.GetSignData(network), key.PrivateKey);
+        }
+
+        /// <summary>
+        /// Signs an <see cref="IVerifiable"/> with the specified signer.
+        /// </summary>
+        /// <param name="verifiable">The <see cref="IVerifiable"/> to sign.</param>
+        /// <param name="signer">The signer to be used.</param>
+        /// <param name="publicKey">The public key of the corresponding private key to be used to sign the data.</param>
+        /// <param name="network">The magic number of the NEO network.</param>
+        /// <returns>
+        /// The signature. If the signer does not contain the specified public key, return <see langword="null"/>.
+        /// </returns>
+        public static byte[] Sign(this IVerifiable verifiable, ISigner signer, ECPoint publicKey, uint network)
+        {
+            return signer.Sign(network, verifiable.GetSignData(network), publicKey);
         }
 
         /// <summary>

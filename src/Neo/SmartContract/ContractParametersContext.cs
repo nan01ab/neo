@@ -15,6 +15,7 @@ using Neo.IO;
 using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.SmartContract.Native;
 using Neo.VM;
 using System;
 using System.Collections.Generic;
@@ -157,6 +158,21 @@ namespace Neo.SmartContract
                 item.Parameters[index].Value = parameters[index];
             }
             return true;
+        }
+
+        internal bool AddDeployedContract(UInt160 scriptHash)
+        {
+            // Try Smart contract verification
+            var contract = NativeContract.ContractManagement.GetContract(SnapshotCache, scriptHash);
+            if (contract != null)
+            {
+                var deployed = new DeployedContract(contract);
+                if (deployed.ParameterList.Length == 0)  // Only works with verify without parameters
+                {
+                    return Add(deployed);
+                }
+            }
+            return false;
         }
 
         /// <summary>

@@ -17,10 +17,10 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.DBFTPlugin.Messages;
+using Neo.Sign;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
-using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -55,11 +55,11 @@ namespace Neo.Plugins.DBFTPlugin.Consensus
         public TransactionVerificationContext VerificationContext = new();
 
         public StoreCache Snapshot { get; private set; }
-        private KeyPair keyPair;
+        private ECPoint _myPublicKey;
         private int _witnessSize;
         private readonly NeoSystem neoSystem;
         private readonly Settings dbftSettings;
-        private readonly Wallet wallet;
+        private readonly ISigner _signer;
         private readonly IStore store;
         private Dictionary<UInt256, ConsensusMessage> cachedMessages;
 
@@ -112,9 +112,9 @@ namespace Neo.Plugins.DBFTPlugin.Consensus
 
         public int Size => throw new NotImplementedException();
 
-        public ConsensusContext(NeoSystem neoSystem, Settings settings, Wallet wallet)
+        public ConsensusContext(NeoSystem neoSystem, Settings settings, ISigner signer)
         {
-            this.wallet = wallet;
+            _signer = signer;
             this.neoSystem = neoSystem;
             dbftSettings = settings;
 
@@ -244,14 +244,17 @@ namespace Neo.Plugins.DBFTPlugin.Consensus
                             LastSeenMessage[validator] = height;
                     }
                 }
-                keyPair = null;
-                for (int i = 0; i < Validators.Length; i++)
+
+                var index = _signer.IndexOf(Validators);
+                if (index >= 0 && index < Validators.Length)
                 {
-                    WalletAccount account = wallet?.GetAccount(Validators[i]);
-                    if (account?.HasKey != true) continue;
-                    MyIndex = i;
-                    keyPair = account.GetKey();
-                    break;
+                    MyIndex = index;
+                    _myPublicKey = Validators[MyIndex];
+                }
+                else
+                {
+                    MyIndex = -1;
+                    _myPublicKey = null;
                 }
                 cachedMessages = new Dictionary<UInt256, ConsensusMessage>();
             }

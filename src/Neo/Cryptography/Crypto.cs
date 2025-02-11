@@ -71,8 +71,8 @@ namespace Neo.Cryptography
         /// <param name="ecCurve">The <see cref="ECC.ECCurve"/> curve of the signature.</param>
         /// <param name="hasher">The hash algorithm to hash the message.</param>
         /// <returns>The ECDSA signature for the specified message.</returns>
-        [Obsolete("Use Sign(byte[], byte[], ECC.ECCurve, HashAlgorithm) instead")]
-        public static byte[] Sign(byte[] message, byte[] priKey, ECC.ECCurve ecCurve, Hasher hasher)
+        [Obsolete("Use Sign(ReadOnlySpan<byte>, byte[], ECC.ECCurve, HashAlgorithm) instead")]
+        public static byte[] Sign(ReadOnlySpan<byte> message, byte[] priKey, ECC.ECCurve ecCurve, Hasher hasher)
         {
             return Sign(message, priKey, ecCurve, (HashAlgorithm)hasher);
         }
@@ -85,7 +85,7 @@ namespace Neo.Cryptography
         /// <param name="ecCurve">The <see cref="ECC.ECCurve"/> curve of the signature, default is <see cref="ECC.ECCurve.Secp256r1"/>.</param>
         /// <param name="hashAlgorithm">The hash algorithm to hash the message, default is SHA256.</param>
         /// <returns>The ECDSA signature for the specified message.</returns>
-        public static byte[] Sign(byte[] message, byte[] priKey, ECC.ECCurve ecCurve = null, HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256)
+        public static byte[] Sign(ReadOnlySpan<byte> message, byte[] priKey, ECC.ECCurve ecCurve = null, HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256)
         {
             if (hashAlgorithm == HashAlgorithm.Keccak256 || (IsOSX && ecCurve == ECC.ECCurve.Secp256k1))
             {
