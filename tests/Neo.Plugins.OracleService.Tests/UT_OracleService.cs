@@ -11,6 +11,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Cryptography.ECC;
+using Neo.Extensions;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
@@ -54,10 +55,12 @@ namespace Neo.Plugins.OracleService.Tests
   ]
 }";
 
-            Assert.AreEqual(@"[""Acme Co""]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "$.Manufacturers[0].Name")));
-            Assert.AreEqual("[50]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "$.Manufacturers[0].Products[0].Price")));
-            Assert.AreEqual(@"[""Elbow Grease""]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "$.Manufacturers[1].Products[0].Name")));
-            Assert.AreEqual(@"[{""Name"":""Elbow Grease"",""Price"":99.95}]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "$.Manufacturers[1].Products[0]")));
+            Assert.AreEqual(@"[""Acme Co""]", OracleService.Filter(json, "$.Manufacturers[0].Name").GetStrictUTF8String());
+            Assert.AreEqual("[50]", OracleService.Filter(json, "$.Manufacturers[0].Products[0].Price").GetStrictUTF8String());
+            Assert.AreEqual(@"[""Elbow Grease""]",
+                OracleService.Filter(json, "$.Manufacturers[1].Products[0].Name").GetStrictUTF8String());
+            Assert.AreEqual(@"[{""Name"":""Elbow Grease"",""Price"":99.95}]",
+                OracleService.Filter(json, "$.Manufacturers[1].Products[0]").GetStrictUTF8String());
         }
 
         [TestMethod]
